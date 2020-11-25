@@ -1,6 +1,6 @@
 ---
 applications:
-- name: spring-music
+- name: dna-music
   memory: 1G
   random-route: true
   buildpacks:
@@ -8,15 +8,29 @@ applications:
   path: build/libs/spring-music-1.0.jar
   health-check-type: http
   health-check-http-endpoint: /actuator/health
+  routes:
+  - route: dna-music.space.org.APPDOMAIN
   env:
+    SLEEP_MS: 5000 #5 seconds sleep for /albums, diagnostic tool
+    SLEEP:    10   #second to log the sidcar connection statistics
+
     JBP_CONFIG_SPRING_AUTO_RECONFIGURATION: '{enabled: false}'
     JBP_CONFIG_OPEN_JDK_JRE: '{ jre: { version: 11.+ } }'
     SPRING_APPLICATION_JSON: '{ "server.shutdown": "graceful", "spring.lifecycle.timeout-per-shutdown-phase": "10s" , "sever.max-keep-alive-requests": -1}'
 
+    #Enable Tomcat Access Logging to stdout
+    SERVER_TOMCAT_ACCESSLOG_ENABLED:         true
+    SERVER_TOMCAT_ACCESSLOG_DIRECTORY:       /dev
+    SERVER_TOMCAT_ACCESSLOG_PREFIX:          stdout
+    SERVER_TOMCAT_ACCESSLOG_BUFFERED:        false
+    SERVER_TOMCAT_ACCESSLOG_SUFFIX:
+    SERVER_TOMCAT_ACCESSLOG_FILE_DATE_FORMAT:
+    SERVER_TOMCAT_ACCESSLOG_PATTERN:         '[ACCESS] "%m %U %H" %s %{org.apache.catalina.AccessLog.RemoteAddr}r %t %D %F %B %S vcap_request_id:%{X-Vcap-Request-Id}i x-mc-correlation-id:%{x-mc-correlation-id}i'
+
   #A side car example
-  #sidecars:
-  #- name: connection-collector
-  #  process_types: [ 'web' ]
-  #  command: ./check-connections.sh
-  #  memory: 32MB
+  sidecars:
+  - name: connection-collector
+    process_types: [ 'web' ]
+    command: ./check-connections.sh
+    memory: 32MB
 
